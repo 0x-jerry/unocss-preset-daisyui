@@ -1,6 +1,16 @@
-import { defineConfig, presetMini } from 'unocss'
+import { defineConfig, presetMini, presetWind4 } from 'unocss'
 import { presetDaisyui } from '../src'
 
 export default defineConfig({
-  presets: [presetMini(), presetDaisyui()],
+  presets: [
+    //
+    // presetMini(),
+    presetWind4({
+      preflights: {
+        // Do not needed, because preset daisyui already included it.
+        reset: false,
+      },
+    }),
+    presetDaisyui(),
+  ],
 })
