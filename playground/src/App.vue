@@ -1,7 +1,10 @@
 <script setup></script>
 
 <template>
-  <div class="flex">
+  <div class="p-4 font-bold text-2xl bg-light-5 mb-8">
+    UnoCSS DaisyUI Preset Playground
+  </div>
+  <div class="flex flex-col">
     <div class="chat chat-start">
       <div class="chat-bubble chat-bubble-primary">
         What kind of nonsense is this
