@@ -14,7 +14,7 @@
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "outDir": "dist",
-    "types": ["vitest/globals"],
+    "types": ["vitest/globals"]
   },
   "include": ["src", "test"]
 }
