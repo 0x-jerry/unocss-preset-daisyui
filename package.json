@@ -1,6 +1,6 @@
 {
   "name": "@0x-jerry/unocss-preset-daisyui",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Daisyui preset for UnoCSS",
   "type": "module",
   "engines": {
