@@ -1,7 +1,7 @@
 {
-  "name": "tpl-ts-sdk",
+  "name": "@0x-jerry/unocss-preset-daisyui",
   "version": "0.0.0",
-  "description": "",
+  "description": "Daisyui preset for UnoCSS",
   "type": "module",
   "engines": {
     "node": ">= 18"
