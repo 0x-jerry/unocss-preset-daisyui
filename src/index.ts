@@ -6,6 +6,9 @@ import fg from 'fast-glob'
 import { getAllClassNames } from './utils'
 import { createRequire } from 'node:module'
 import type { EmptyObject } from '@0x-jerry/utils'
+import postcss from 'postcss'
+// @ts-ignore
+import nestingPlugin from '@tailwindcss/nesting'
 
 const daisyuiBaseDir = path.dirname(
   createRequire(import.meta.url).resolve('daisyui/daisyui.css'),
@@ -26,9 +29,14 @@ async function calcClassContentMap() {
     { cwd: daisyuiBaseDir },
   )
 
+  const processer = postcss([nestingPlugin])
   const p = files.map(async (file) => {
     const content = await readFile(path.join(daisyuiBaseDir, file), 'utf-8')
-    fileMap.set(file, content)
+
+    const postcssResult = await processer.process(content, {
+      from: undefined,
+    })
+    fileMap.set(file, postcssResult.css)
 
     const names = getAllClassNames(cssTree.parse(content))
 
@@ -51,7 +59,7 @@ async function calcClassContentMap() {
 export async function presetDaisyui(): Promise<Preset<EmptyObject>> {
   const { fileMap, clxNameMap } = await calcClassContentMap()
 
-  const autocompletes: string[] = clxNameMap.keys().toArray()
+  const autocompletes: string[] = [...clxNameMap.keys()]
 
   const rules: Rule[] = autocompletes.map((name) => [
     name,
@@ -60,9 +68,9 @@ export async function presetDaisyui(): Promise<Preset<EmptyObject>> {
 
   const preflight: Preflight = {
     getCSS(ctx) {
-      const builtinFiles = fileMap
-        .keys()
-        .filter((file) => file.startsWith('base/'))
+      const builtinFiles = [...fileMap.keys()].filter((file) =>
+        file.startsWith('base/'),
+      )
 
       const includeFiles = new Set<string>(builtinFiles)
 
