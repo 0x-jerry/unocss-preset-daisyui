@@ -7,8 +7,7 @@ import { getAllClassNames } from './utils'
 import { createRequire } from 'node:module'
 import type { EmptyObject } from '@0x-jerry/utils'
 import postcss from 'postcss'
-// @ts-ignore
-import nestingPlugin from '@tailwindcss/nesting'
+import nestingPlugin from 'postcss-nested'
 
 const daisyuiBaseDir = path.dirname(
   createRequire(import.meta.url).resolve('daisyui/daisyui.css'),
@@ -29,11 +28,11 @@ async function calcClassContentMap() {
     { cwd: daisyuiBaseDir },
   )
 
-  const processer = postcss([nestingPlugin])
+  const processor = postcss([nestingPlugin])
   const p = files.map(async (file) => {
     const content = await readFile(path.join(daisyuiBaseDir, file), 'utf-8')
 
-    const postcssResult = await processer.process(content, {
+    const postcssResult = await processor.process(content, {
       from: undefined,
     })
     fileMap.set(file, postcssResult.css)
