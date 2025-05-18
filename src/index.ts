@@ -35,9 +35,11 @@ async function calcClassContentMap() {
     const postcssResult = await processor.process(content, {
       from: undefined,
     })
-    fileMap.set(file, postcssResult.css)
 
-    const names = getAllClassNames(cssTree.parse(content))
+    const cssContent = postcssResult.css
+    fileMap.set(file, cssContent)
+
+    const names = getAllClassNames(cssTree.parse(cssContent))
 
     names.forEach((name) => {
       if (!clxNameMap.has(name)) {
