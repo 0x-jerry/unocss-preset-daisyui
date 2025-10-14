@@ -4,5 +4,6 @@ import uno from 'unocss/vite'
 
 // https://vite.dev/config/
 export default defineConfig({
+  base: './',
   plugins: [vue(), uno()],
 })
