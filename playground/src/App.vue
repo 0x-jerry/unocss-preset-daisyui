@@ -1,8 +1,25 @@
-<script setup></script>
+<script setup>
+import { onMounted, ref, watch } from "vue";
+
+const theme = ref("light");
+
+watch(theme, updateTheme);
+
+onMounted(updateTheme);
+
+function updateTheme() {
+  document.documentElement.setAttribute("data-theme", theme.value);
+}
+</script>
 
 <template>
-  <div class="p-4 font-bold text-2xl bg-light-5 mb-8">
+  <div class="p-4 font-bold text-2xl bg-light-5 mb-8 flex items-center gap-2">
     UnoCSS DaisyUI Preset Playground
+    <select class="select" v-model="theme" placeholder="Please select theme">
+      <option value="light">Light</option>
+      <option value="dark">Dark</option>
+      <option value="halloween">Halloween</option>
+    </select>
   </div>
   <div class="flex flex-col">
     <div class="chat chat-start">
