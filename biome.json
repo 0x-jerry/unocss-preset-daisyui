@@ -1,5 +1,6 @@
 {
-  "$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
+  "root": false,
+  "$schema": "https://biomejs.dev/schemas/2.2.6/schema.json",
   "vcs": {
     "enabled": true,
     "clientKind": "git",
@@ -7,14 +8,21 @@
   },
   "files": {
     "ignoreUnknown": true,
-    "ignore": []
+    "includes": [
+      "src",
+      "playground/src"
+    ]
   },
   "formatter": {
     "enabled": true,
     "useEditorconfig": true
   },
-  "organizeImports": {
-    "enabled": true
+  "assist": {
+    "actions": {
+      "source": {
+        "organizeImports": "on"
+      }
+    }
   },
   "linter": {
     "enabled": true,
@@ -40,8 +48,8 @@
   },
   "overrides": [
     {
-      "include": [
-        "*.vue"
+      "includes": [
+        "**/*.vue"
       ],
       "linter": {
         "rules": {
