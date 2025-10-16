@@ -32,14 +32,12 @@ async function calcClassContentMap() {
   const p = files.map(async (file) => {
     const content = await readFile(path.join(daisyuiBaseDir, file), 'utf-8')
 
-    const postcssResult = await processor.process(content, {
-      from: undefined,
-    })
+    const postcssResult = await processor.process(content)
 
     const cssContent = postcssResult.css
     fileMap.set(file, cssContent)
 
-    const names = getAllClassNames(cssTree.parse(cssContent))
+    const names = getAllClassNames(cssContent)
 
     names.forEach((name) => {
       if (!clxNameMap.has(name)) {
@@ -107,7 +105,6 @@ export async function presetDaisyui(): Promise<Preset<EmptyObject>> {
       {
         name: 'daisyui-scanner',
         transform(_code, _id, ctx) {
-
           // check variant classes like `hover:xxx`, `2xl:xxx`
           for (const token of ctx.tokens) {
             if (token.includes(':') && clxNameMap.has(token)) {

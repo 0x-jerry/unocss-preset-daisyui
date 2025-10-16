@@ -1,18 +1,46 @@
 import * as cssTree from 'css-tree'
 
-export function getAllClassNames(ast: cssTree.CssNode): string[] {
+export interface GenerateClassNameOptions {
+  source?: boolean
+}
+
+export function getAllClassNames(
+  source: string,
+  opt: GenerateClassNameOptions = {},
+): string[] {
+  const ast = cssTree.parse(source, {
+    positions: true,
+  })
+
   const classNames = new Set<string>()
 
   cssTree.walk(ast, {
-    visit: 'ClassSelector',
+    visit: 'Rule',
     enter(node) {
-      const name = unescapeCssIdentifier(node.name)
+      cssTree.walk(node, {
+        visit: 'ClassSelector',
+        enter(node) {
+          const name = unescapeCssIdentifier(node.name)
 
-      classNames.add(name)
+          classNames.add(name)
+        },
+      })
+
+      if (opt.source) {
+        const precludeStr = getSourceStr(node.prelude.loc!)
+
+        if (precludeStr.lastIndexOf('.') !== 0) {
+          throw new Error(`Source pair only avaiable for one class name!`)
+        }
+      }
     },
   })
 
   return [...classNames]
+
+  function getSourceStr(loc: cssTree.CssLocation) {
+    return source.slice(loc.start.offset, loc.end.offset)
+  }
 }
 
 function unescapeCssIdentifier(escaped: string): string {
