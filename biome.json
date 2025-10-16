@@ -10,7 +10,8 @@
     "ignoreUnknown": true,
     "includes": [
       "src/**",
-      "playground/src/**"
+      "playground/src/**",
+      "test/**/*.ts"
     ]
   },
   "formatter": {
