@@ -1,4 +1,9 @@
 import * as cssTree from 'css-tree'
+import fg from 'fast-glob'
+import { createRequire } from 'module'
+import path from 'path'
+import postcss from 'postcss'
+import nestingPlugin from 'postcss-nested'
 
 export interface GenerateClassNameOptions {
   source?: boolean
@@ -7,36 +12,46 @@ export interface GenerateClassNameOptions {
 export function getAllClassNames(
   source: string,
   opt: GenerateClassNameOptions = {},
-): string[] {
+): Map<string, string | undefined> {
   const ast = cssTree.parse(source, {
-    positions: true,
+    positions: opt.source,
   })
 
-  const classNames = new Set<string>()
+  const classNameContentMap = new Map<string, string | undefined>()
 
   cssTree.walk(ast, {
     visit: 'Rule',
     enter(node) {
+      if (opt.source) {
+        checkPrecludeSize(node.prelude)
+      }
+
+      const blockSource = node.block.loc
+        ? getSourceStr(node.block.loc).slice(1, -1)
+        : undefined
+
       cssTree.walk(node, {
         visit: 'ClassSelector',
         enter(node) {
           const name = unescapeCssIdentifier(node.name)
 
-          classNames.add(name)
+          const previous = classNameContentMap.get(name) || ''
+
+          classNameContentMap.set(name, previous + blockSource)
         },
       })
-
-      if (opt.source) {
-        const precludeStr = getSourceStr(node.prelude.loc!)
-
-        if (precludeStr.lastIndexOf('.') !== 0) {
-          throw new Error(`Source pair only avaiable for one class name!`)
-        }
-      }
     },
   })
 
-  return [...classNames]
+  return classNameContentMap
+
+  function checkPrecludeSize(node: cssTree.CssNode) {
+    if (node.type === 'SelectorList') {
+      if (node.children.size > 1) {
+        throw new Error(`Source pair only available for one class name!`)
+      }
+    }
+  }
 
   function getSourceStr(loc: cssTree.CssLocation) {
     return source.slice(loc.start.offset, loc.end.offset)
@@ -53,4 +68,22 @@ function unescapeCssIdentifier(escaped: string): string {
       // Handle escaped special characters: \:, \., \-, etc.
       .replace(/\\(.)/g, '$1')
   )
+}
+
+export async function processByPostCss(content: string): Promise<string> {
+  const processor = postcss([nestingPlugin])
+  const postcssResult = await processor.process(content, {
+    // keep this to ignore warnings
+    from: undefined,
+  })
+
+  return postcssResult.css
+}
+
+export function globForDaisyUI(pattern: string[]): string[] {
+  const daisyuiBaseDir = path.dirname(
+    createRequire(import.meta.url).resolve('daisyui/daisyui.css'),
+  )
+
+  return fg.sync(pattern, { cwd: daisyuiBaseDir, absolute: true })
 }

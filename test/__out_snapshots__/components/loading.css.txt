@@ -1,0 +1,14 @@
+[
+  "loading",
+  "loading-ball",
+  "loading-bars",
+  "loading-dots",
+  "loading-infinity",
+  "loading-lg",
+  "loading-md",
+  "loading-ring",
+  "loading-sm",
+  "loading-spinner",
+  "loading-xl",
+  "loading-xs",
+]

@@ -1,0 +1,16 @@
+[
+  "2xl:list",
+  "2xl:list-col-wrap",
+  "lg:list",
+  "lg:list-col-wrap",
+  "list",
+  "list-col-grow",
+  "list-col-wrap",
+  "list-row",
+  "md:list",
+  "md:list-col-wrap",
+  "sm:list",
+  "sm:list-col-wrap",
+  "xl:list",
+  "xl:list-col-wrap",
+]

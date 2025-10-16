@@ -1,0 +1,12 @@
+[
+  "2xl:stack",
+  "lg:stack",
+  "md:stack",
+  "sm:stack",
+  "stack",
+  "stack-bottom",
+  "stack-end",
+  "stack-start",
+  "stack-top",
+  "xl:stack",
+]

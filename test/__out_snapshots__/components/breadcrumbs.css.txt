@@ -1,0 +1,8 @@
+[
+  "2xl:breadcrumbs",
+  "breadcrumbs",
+  "lg:breadcrumbs",
+  "md:breadcrumbs",
+  "sm:breadcrumbs",
+  "xl:breadcrumbs",
+]

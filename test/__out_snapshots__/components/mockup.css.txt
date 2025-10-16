@@ -1,0 +1,10 @@
+[
+  "input",
+  "mockup-browser",
+  "mockup-browser-toolbar",
+  "mockup-code",
+  "mockup-phone",
+  "mockup-phone-camera",
+  "mockup-phone-display",
+  "mockup-window",
+]

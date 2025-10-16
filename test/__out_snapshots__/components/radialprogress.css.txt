@@ -1,0 +1,8 @@
+[
+  "2xl:radial-progress",
+  "lg:radial-progress",
+  "md:radial-progress",
+  "radial-progress",
+  "sm:radial-progress",
+  "xl:radial-progress",
+]

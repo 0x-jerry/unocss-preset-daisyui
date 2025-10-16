@@ -1,0 +1,9 @@
+[
+  "swap",
+  "swap-active",
+  "swap-flip",
+  "swap-indeterminate",
+  "swap-off",
+  "swap-on",
+  "swap-rotate",
+]

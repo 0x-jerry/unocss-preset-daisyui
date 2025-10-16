@@ -1,58 +1,68 @@
 import { readFile } from 'node:fs/promises'
-import { createRequire } from 'node:module'
-import path from 'node:path'
 import type { EmptyObject } from '@0x-jerry/utils'
-import * as cssTree from 'css-tree'
-import fg from 'fast-glob'
-import postcss from 'postcss'
-import nestingPlugin from 'postcss-nested'
 import { definePreset, type Preflight, type Preset, type Rule } from 'unocss'
-import { getAllClassNames } from './utils'
-
-const daisyuiBaseDir = path.dirname(
-  createRequire(import.meta.url).resolve('daisyui/daisyui.css'),
-)
+import { getAllClassNames, globForDaisyUI, processByPostCss } from './utils'
 
 async function calcClassContentMap() {
-  const clxNameMap = new Map<string, Set<string>>()
-  const fileMap = new Map<string, string>()
+  const clxNameFilesMap = new Map<string, Set<string>>()
+  const fileContent = new Map<string, string>()
 
-  const files = fg.sync(
-    [
-      'base/*.css',
-      'components/*.css',
-      'utilities/*.css',
-      'colors/*.css',
-      // 'theme/*.css',
-    ],
-    { cwd: daisyuiBaseDir },
-  )
+  const files = globForDaisyUI([
+    //
+    'components/*.css',
+  ])
 
-  const processor = postcss([nestingPlugin])
   const p = files.map(async (file) => {
-    const content = await readFile(path.join(daisyuiBaseDir, file), 'utf-8')
+    const content = await readFile(file, 'utf-8')
 
-    const postcssResult = await processor.process(content)
+    const cssContent = await processByPostCss(content)
 
-    const cssContent = postcssResult.css
-    fileMap.set(file, cssContent)
+    fileContent.set(file, cssContent)
 
-    const names = getAllClassNames(cssContent)
+    const names = getAllClassNames(cssContent, { source: false })
 
-    names.forEach((name) => {
-      if (!clxNameMap.has(name)) {
-        clxNameMap.set(name, new Set())
+    names.forEach((_, name) => {
+      if (!clxNameFilesMap.has(name)) {
+        clxNameFilesMap.set(name, new Set())
       }
-      clxNameMap.get(name)?.add(file)
+
+      clxNameFilesMap.get(name)?.add(file)
     })
   })
 
   await Promise.all(p)
 
   return {
-    fileMap,
-    clxNameMap,
+    fileMap: fileContent,
+    clxNameMap: clxNameFilesMap,
   }
+}
+
+async function calcRules() {
+  const files = globForDaisyUI([
+    //
+    // 'utilities/*.css',
+    'colors/*.css',
+  ])
+
+  const rules: Rule[] = []
+
+  const p = files.map(async (file) => {
+    const content = await readFile(file, 'utf-8')
+
+    const cssContent = await processByPostCss(content)
+
+    console.log(file)
+    const names = getAllClassNames(cssContent, { source: true })
+
+    names.forEach((content, name) => {
+      rules.push([name, [`.${name}{${content}}`]])
+    })
+  })
+
+  await Promise.all(p)
+
+  return rules
 }
 
 export async function presetDaisyui(): Promise<Preset<EmptyObject>> {
@@ -65,13 +75,13 @@ export async function presetDaisyui(): Promise<Preset<EmptyObject>> {
     [`/* daisyui: ${name} */`],
   ])
 
+  rules.push(...(await calcRules()))
+
   const extraIncludeFiles = new Set<string>()
 
   const preflight: Preflight = {
     getCSS(ctx) {
-      const builtinFiles = [...fileMap.keys()].filter((file) =>
-        file.startsWith('base/'),
-      )
+      const builtinFiles = globForDaisyUI(['base/*.css'])
 
       const includeFiles = new Set<string>(builtinFiles)
 
