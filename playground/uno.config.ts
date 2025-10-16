@@ -1,4 +1,4 @@
-import { defineConfig, presetMini, presetWind4 } from 'unocss'
+import { defineConfig, presetWind4 } from 'unocss'
 import { presetDaisyui } from '../src'
 
 export default defineConfig({

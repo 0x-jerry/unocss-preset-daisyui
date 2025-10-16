@@ -1,6 +1,11 @@
 import { readFile } from 'node:fs/promises'
-import type { EmptyObject } from '@0x-jerry/utils'
-import { definePreset, type Preflight, type Preset, type Rule } from 'unocss'
+import {
+  definePreset,
+  type Preflight,
+  type Preset,
+  type PresetFactoryAwaitable,
+  type Rule,
+} from 'unocss'
 import { getAllClassNames, globForDaisyUI, processByPostCss } from './utils'
 
 async function calcClassContentMap() {
@@ -9,6 +14,8 @@ async function calcClassContentMap() {
 
   const files = globForDaisyUI([
     //
+    'utilities/*.css',
+    'colors/*.css',
     'components/*.css',
   ])
 
@@ -38,97 +45,72 @@ async function calcClassContentMap() {
   }
 }
 
-async function calcRules() {
-  const files = globForDaisyUI([
-    //
-    // 'utilities/*.css',
-    'colors/*.css',
-  ])
+export const presetDaisyui: PresetFactoryAwaitable<object, undefined> =
+  definePreset(async () => {
+    const { fileMap, clxNameMap } = await calcClassContentMap()
 
-  const rules: Rule[] = []
+    const autocompletes: string[] = [...clxNameMap.keys()]
 
-  const p = files.map(async (file) => {
-    const content = await readFile(file, 'utf-8')
+    const rules: Rule[] = autocompletes.map((name) => [
+      name,
+      [`/* daisyui: ${name} */`],
+    ])
 
-    const cssContent = await processByPostCss(content)
+    const extraIncludeFiles = new Set<string>()
 
-    console.log(file)
-    const names = getAllClassNames(cssContent, { source: true })
+    const preflight: Preflight = {
+      getCSS(ctx) {
+        const builtinFiles = globForDaisyUI(['base/*.css'])
 
-    names.forEach((content, name) => {
-      rules.push([name, [`.${name}{${content}}`]])
-    })
-  })
+        const includeFiles = new Set<string>(builtinFiles)
 
-  await Promise.all(p)
-
-  return rules
-}
-
-export async function presetDaisyui(): Promise<Preset<EmptyObject>> {
-  const { fileMap, clxNameMap } = await calcClassContentMap()
-
-  const autocompletes: string[] = [...clxNameMap.keys()]
-
-  const rules: Rule[] = autocompletes.map((name) => [
-    name,
-    [`/* daisyui: ${name} */`],
-  ])
-
-  rules.push(...(await calcRules()))
-
-  const extraIncludeFiles = new Set<string>()
-
-  const preflight: Preflight = {
-    getCSS(ctx) {
-      const builtinFiles = globForDaisyUI(['base/*.css'])
-
-      const includeFiles = new Set<string>(builtinFiles)
-
-      ctx.generator.activatedRules.forEach((rule) => {
-        const name = rule[0]
-        if (name instanceof RegExp) {
-          return
-        }
-
-        if (clxNameMap.has(name)) {
-          clxNameMap.get(name)?.forEach((file) => {
-            includeFiles.add(file)
-          })
-        }
-      })
-
-      const css = [...includeFiles, ...extraIncludeFiles].map((file) => {
-        const content = fileMap.get(file)
-        return content || ''
-      })
-
-      return css.join('\n')
-    },
-  }
-
-  const preset: Preset = {
-    name: 'uno-preset-daisyui',
-    rules,
-    preflights: [preflight],
-    transformers: [
-      {
-        name: 'daisyui-scanner',
-        transform(_code, _id, ctx) {
-          // check variant classes like `hover:xxx`, `2xl:xxx`
-          for (const token of ctx.tokens) {
-            if (token.includes(':') && clxNameMap.has(token)) {
-              clxNameMap.get(token)?.forEach((file) => {
-                extraIncludeFiles.add(file)
-              })
-            }
+        ctx.generator.activatedRules.forEach((rule) => {
+          const name = rule[0]
+          if (name instanceof RegExp) {
+            return
           }
-        },
-      },
-    ],
-  }
 
-  return definePreset(preset)
-}
+          if (clxNameMap.has(name)) {
+            clxNameMap.get(name)?.forEach((file) => {
+              includeFiles.add(file)
+            })
+          }
+        })
+
+        const cssFiles = [...includeFiles, ...extraIncludeFiles]
+        const css = cssFiles.map((file) => {
+          const content = fileMap.get(file)
+          return content || ''
+        })
+
+        return css.join('\n')
+      },
+    }
+
+    const preset: Preset = {
+      name: 'uno-preset-daisyui',
+      rules,
+      preflights: [preflight],
+      transformers: [
+        {
+          name: 'daisyui-scanner',
+          transform(_code, _id, ctx) {
+            // check variant classes like `hover:xxx`, `2xl:xxx`
+            for (const token of ctx.tokens) {
+              if (token.includes(':')) {
+                if (clxNameMap.has(token)) {
+                  clxNameMap.get(token)?.forEach((file) => {
+                    extraIncludeFiles.add(file)
+                  })
+                }
+              }
+            }
+          },
+        },
+      ],
+    }
+
+    return preset
+  })
 
 export default presetDaisyui
