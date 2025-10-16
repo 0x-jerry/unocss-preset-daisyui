@@ -9,8 +9,8 @@
   "files": {
     "ignoreUnknown": true,
     "includes": [
-      "src",
-      "playground/src"
+      "src/**",
+      "playground/src/**"
     ]
   },
   "formatter": {

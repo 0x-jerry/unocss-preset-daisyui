@@ -39,6 +39,10 @@ function updateTheme() {
       <button class="btn btn-soft btn-error">Error</button>
     </div>
 
+    <div class="flex gap-1">
+      <div class="hover:text-primary">Hover me</div>
+    </div>
+
     <div class="flex flex-col">
       <div class="chat chat-start">
         <div class="chat-bubble chat-bubble-primary">

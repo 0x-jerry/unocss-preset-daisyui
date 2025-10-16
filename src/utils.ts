@@ -6,13 +6,23 @@ export function getAllClassNames(ast: cssTree.CssNode): string[] {
   cssTree.walk(ast, {
     visit: 'ClassSelector',
     enter(node) {
-      const name = node.name.replaceAll('\\/', '/')
+      const name = unescapeCssIdentifier(node.name)
 
-      if (!name.includes(':')) {
-        classNames.add(name)
-      }
+      classNames.add(name)
     },
   })
 
   return [...classNames]
+}
+
+function unescapeCssIdentifier(escaped: string): string {
+  return (
+    escaped
+      // Handle Unicode/numeric escapes: \32  (hex up to 6 digits) + optional space
+      .replace(/\\([0-9A-Fa-f]{1,6})\s?/g, (_, hex) =>
+        String.fromCodePoint(parseInt(hex, 16)),
+      )
+      // Handle escaped special characters: \:, \., \-, etc.
+      .replace(/\\(.)/g, '$1')
+  )
 }

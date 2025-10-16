@@ -1,13 +1,13 @@
-import { definePreset, type Preflight, type Preset, type Rule } from 'unocss'
 import { readFile } from 'node:fs/promises'
-import * as cssTree from 'css-tree'
-import path from 'node:path'
-import fg from 'fast-glob'
-import { getAllClassNames } from './utils'
 import { createRequire } from 'node:module'
+import path from 'node:path'
 import type { EmptyObject } from '@0x-jerry/utils'
+import * as cssTree from 'css-tree'
+import fg from 'fast-glob'
 import postcss from 'postcss'
 import nestingPlugin from 'postcss-nested'
+import { definePreset, type Preflight, type Preset, type Rule } from 'unocss'
+import { getAllClassNames } from './utils'
 
 const daisyuiBaseDir = path.dirname(
   createRequire(import.meta.url).resolve('daisyui/daisyui.css'),
@@ -67,6 +67,8 @@ export async function presetDaisyui(): Promise<Preset<EmptyObject>> {
     [`/* daisyui: ${name} */`],
   ])
 
+  const extraIncludeFiles = new Set<string>()
+
   const preflight: Preflight = {
     getCSS(ctx) {
       const builtinFiles = [...fileMap.keys()].filter((file) =>
@@ -88,7 +90,7 @@ export async function presetDaisyui(): Promise<Preset<EmptyObject>> {
         }
       })
 
-      const css = [...includeFiles].map((file) => {
+      const css = [...includeFiles, ...extraIncludeFiles].map((file) => {
         const content = fileMap.get(file)
         return content || ''
       })
@@ -97,11 +99,29 @@ export async function presetDaisyui(): Promise<Preset<EmptyObject>> {
     },
   }
 
-  return definePreset({
+  const preset: Preset = {
     name: 'uno-preset-daisyui',
     rules,
     preflights: [preflight],
-  })
+    transformers: [
+      {
+        name: 'daisyui-scanner',
+        transform(_code, _id, ctx) {
+
+          // check variant classes like `hover:xxx`, `2xl:xxx`
+          for (const token of ctx.tokens) {
+            if (token.includes(':') && clxNameMap.has(token)) {
+              clxNameMap.get(token)?.forEach((file) => {
+                extraIncludeFiles.add(file)
+              })
+            }
+          }
+        },
+      },
+    ],
+  }
+
+  return definePreset(preset)
 }
 
 export default presetDaisyui
