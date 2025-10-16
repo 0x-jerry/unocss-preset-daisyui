@@ -1,14 +1,14 @@
 <script setup>
-import { onMounted, ref, watch } from "vue";
+import { onMounted, ref, watch } from 'vue'
 
-const theme = ref("light");
+const theme = ref('light')
 
-watch(theme, updateTheme);
+watch(theme, updateTheme)
 
-onMounted(updateTheme);
+onMounted(updateTheme)
 
 function updateTheme() {
-  document.documentElement.setAttribute("data-theme", theme.value);
+  document.documentElement.setAttribute('data-theme', theme.value)
 }
 </script>
 
@@ -84,4 +84,8 @@ function updateTheme() {
   </div>
 </template>
 
-<style scoped></style>
+<style>
+html {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+</style>

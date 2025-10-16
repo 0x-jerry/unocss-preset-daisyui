@@ -8,9 +8,6 @@ importers:
 
   .:
     dependencies:
-      '@0x-jerry/utils':
-        specifier: ^5.0.0
-        version: 5.0.0
       css-tree:
         specifier: ^3.1.0
         version: 3.1.0
@@ -20,9 +17,6 @@ importers:
       fast-glob:
         specifier: ^3.3.3
         version: 3.3.3
-      import-meta-resolve:
-        specifier: ^4.2.0
-        version: 4.2.0
       postcss:
         specifier: ^8.5.6
         version: 8.5.6
@@ -30,7 +24,7 @@ importers:
         specifier: ^7.0.2
         version: 7.0.2(postcss@8.5.6)
       unocss:
-        specifier: ^66.5.4
+        specifier: ^66.0.0
         version: 66.5.4(postcss@8.5.6)(vite@7.1.9(@types/node@24.7.2)(jiti@2.6.1)(tsx@4.20.6)(yaml@2.6.0))
     devDependencies:
       '@0x-jerry/x-release':
@@ -74,7 +68,7 @@ importers:
         specifier: ^6.0.1
         version: 6.0.1(vite@7.1.9(@types/node@24.7.2)(jiti@2.6.1)(tsx@4.20.6)(yaml@2.6.0))(vue@3.5.22(typescript@5.9.3))
       unocss:
-        specifier: ^66.5.4
+        specifier: ^66.0.0
         version: 66.5.4(postcss@8.5.6)(vite@7.1.9(@types/node@24.7.2)(jiti@2.6.1)(tsx@4.20.6)(yaml@2.6.0))
       vite:
         specifier: ^7.1.9
@@ -960,9 +954,6 @@ packages:
 
   html-escaper@2.0.2:
     resolution: {integrity: sha512-H2iMtd0I4Mt5eYiapRdIDjp+XzelXQ0tFE4JS7YFwFevXXMmOp9myNrUvCg0D6ws8iqkRPBfKHgbwig1SmlLfg==}
-
-  import-meta-resolve@4.2.0:
-    resolution: {integrity: sha512-Iqv2fzaTQN28s/FwZAoFq0ZSs/7hMAHJVX+w8PZl3cY19Pxk6jFFalxQoIfW2826i/fDLXv8IiEZRIT0lDuWcg==}
 
   is-binary-path@2.1.0:
     resolution: {integrity: sha512-ZMERYes6pDydyuGidse7OsHxtbI7WVeUEozgR/g7rd0xUimYNlvZRE/K2MgZTjWy725IfelLeVcEM97mmtRGXw==}
@@ -2452,8 +2443,6 @@ snapshots:
   has-flag@4.0.0: {}
 
   html-escaper@2.0.2: {}
-
-  import-meta-resolve@4.2.0: {}
 
   is-binary-path@2.1.0:
     dependencies:
