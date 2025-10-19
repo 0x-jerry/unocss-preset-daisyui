@@ -1,5 +1,6 @@
 import * as cssTree from 'css-tree'
 import fg from 'fast-glob'
+import { readFile } from 'fs/promises'
 import { createRequire } from 'module'
 import path from 'path'
 import postcss from 'postcss'
@@ -80,10 +81,42 @@ export async function processByPostCss(content: string): Promise<string> {
   return postcssResult.css
 }
 
-export function globForDaisyUI(pattern: string[]): string[] {
+interface GlobResult {
+  cwd: string
+  path: string
+  fullPath: string
+  content: string
+}
+
+export async function globForDaisyUI(
+  pattern: string[],
+): Promise<Map<string, GlobResult>> {
   const daisyuiBaseDir = path.dirname(
     createRequire(import.meta.url).resolve('daisyui/daisyui.css'),
   )
+  const cwd = daisyuiBaseDir
 
-  return fg.sync(pattern, { cwd: daisyuiBaseDir, absolute: true })
+  const files = await fg(pattern, { cwd })
+
+  const fileContentMap = new Map<string, GlobResult>()
+
+  const p = files.map(async (relativePath) => {
+    const filePath = path.join(daisyuiBaseDir, relativePath)
+
+    const rawContent = await readFile(filePath, 'utf-8')
+    const cssContent = await processByPostCss(rawContent)
+
+    const result: GlobResult = {
+      cwd,
+      path: relativePath,
+      fullPath: filePath,
+      content: cssContent,
+    }
+
+    fileContentMap.set(relativePath, result)
+  })
+
+  await Promise.all(p)
+
+  return fileContentMap
 }

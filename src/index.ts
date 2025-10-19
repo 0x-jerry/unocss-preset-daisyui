@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises'
 import {
   definePreset,
   type Preflight,
@@ -6,50 +5,51 @@ import {
   type PresetFactoryAwaitable,
   type Rule,
 } from 'unocss'
-import { getAllClassNames, globForDaisyUI, processByPostCss } from './utils'
+import { getAllClassNames, globForDaisyUI } from './utils'
 
 async function calcClassContentMap() {
-  const clxNameFilesMap = new Map<string, Set<string>>()
-  const fileContent = new Map<string, string>()
+  const clxNameFilesMap: Map<string, Set<string>> = new Map()
 
-  const files = globForDaisyUI([
+  const files = await globForDaisyUI([
     //
     'utilities/*.css',
     'colors/*.css',
     'components/*.css',
   ])
 
-  const p = files.map(async (file) => {
-    const content = await readFile(file, 'utf-8')
-
-    const cssContent = await processByPostCss(content)
-
-    fileContent.set(file, cssContent)
-
-    const names = getAllClassNames(cssContent, { source: false })
+  const p = files.values().map(async (file) => {
+    const names = getAllClassNames(file.content, { source: false })
 
     names.forEach((_, name) => {
       if (!clxNameFilesMap.has(name)) {
         clxNameFilesMap.set(name, new Set())
       }
 
-      clxNameFilesMap.get(name)?.add(file)
+      clxNameFilesMap.get(name)?.add(file.path)
     })
   })
 
   await Promise.all(p)
 
   return {
-    fileMap: fileContent,
-    clxNameMap: clxNameFilesMap,
+    fileContentMap: files,
+    clxNameFilesMap,
   }
 }
 
 export const presetDaisyui: PresetFactoryAwaitable<object, undefined> =
   definePreset(async () => {
-    const { fileMap, clxNameMap } = await calcClassContentMap()
+    const baseFiles = await globForDaisyUI(['base/*.css'])
 
-    const autocompletes: string[] = [...clxNameMap.keys()]
+    const baseCssContent = baseFiles
+      .values()
+      .map((n) => n.content)
+      .toArray()
+      .join('\n')
+
+    const { fileContentMap, clxNameFilesMap } = await calcClassContentMap()
+
+    const autocompletes: string[] = [...clxNameFilesMap.keys()]
 
     const rules: Rule[] = autocompletes.map((name) => [
       name,
@@ -60,30 +60,24 @@ export const presetDaisyui: PresetFactoryAwaitable<object, undefined> =
 
     const preflight: Preflight = {
       getCSS(ctx) {
-        const builtinFiles = globForDaisyUI(['base/*.css'])
-
-        const includeFiles = new Set<string>(builtinFiles)
+        const includeFiles = new Set<string>()
 
         ctx.generator.activatedRules.forEach((rule) => {
-          const name = rule[0]
-          if (name instanceof RegExp) {
+          const token = rule[0]
+          if (token instanceof RegExp) {
             return
           }
 
-          if (clxNameMap.has(name)) {
-            clxNameMap.get(name)?.forEach((file) => {
-              includeFiles.add(file)
-            })
-          }
+          checkTokenToInclude(token)
         })
 
         const cssFiles = [...includeFiles, ...extraIncludeFiles]
-        const css = cssFiles.map((file) => {
-          const content = fileMap.get(file)
-          return content || ''
+        const css = cssFiles.map((relativeFilePath) => {
+          const file = fileContentMap.get(relativeFilePath)
+          return file?.content || ''
         })
 
-        return css.join('\n')
+        return [baseCssContent, ...css].join('\n')
       },
     }
 
@@ -98,11 +92,7 @@ export const presetDaisyui: PresetFactoryAwaitable<object, undefined> =
             // check variant classes like `hover:xxx`, `2xl:xxx`
             for (const token of ctx.tokens) {
               if (token.includes(':')) {
-                if (clxNameMap.has(token)) {
-                  clxNameMap.get(token)?.forEach((file) => {
-                    extraIncludeFiles.add(file)
-                  })
-                }
+                checkTokenToInclude(token)
               }
             }
           },
@@ -111,6 +101,13 @@ export const presetDaisyui: PresetFactoryAwaitable<object, undefined> =
     }
 
     return preset
+    function checkTokenToInclude(token: string) {
+      if (clxNameFilesMap.has(token)) {
+        clxNameFilesMap.get(token)?.forEach((file) => {
+          extraIncludeFiles.add(file)
+        })
+      }
+    }
   })
 
 export default presetDaisyui
